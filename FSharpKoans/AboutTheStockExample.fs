@@ -1,33 +1,35 @@
 ﻿namespace FSharpKoans
 open FSharpKoans.Core
+open System.Globalization
+open System
 
 //---------------------------------------------------------------
 // Apply Your Knowledge!
 //
-// Below is a list containing comma separated data about 
+// Below is a list containing comma separated data about
 // Microsoft's stock prices during March of 2012. Without
 // modifying the list, programatically find the day with the
 // greatest difference between the opening and closing prices.
 //
 // The following functions may be of use:
-// 
+//
 // abs - takes the absolute value of an argument
-// 
-// System.Double.Parse - converts a string argument into a 
+//
+// System.Double.Parse - converts a string argument into a
 //                       numerical value.
 //
-// Hint: Use CultureInfo.InvariantCulture to always parse '.' as 
+// Hint: Use CultureInfo.InvariantCulture to always parse '.' as
 // the decimal point.
 //
 // The following function will convert a comma separated string
 // into an array of the column values.
-//                       
+//
 // let splitCommas (x:string) =
 //     x.Split([|','|])
 //---------------------------------------------------------------
 [<Koan(Sort = 15)>]
 module ``about the stock example`` =
-    
+
     let stockData =
         [ "Date,Open,High,Low,Close,Volume,Adj Close";
           "2012-03-30,32.40,32.41,32.04,32.26,31749400,32.26";
@@ -53,13 +55,47 @@ module ``about the stock example`` =
           "2012-03-02,32.31,32.44,32.00,32.08,47314200,32.08";
           "2012-03-01,31.93,32.39,31.85,32.29,77344100,32.29";
           "2012-02-29,31.89,32.00,31.61,31.74,59323600,31.74"; ]
-    
+
     // Feel free to add extra [<Koan>] members here to write
-    // tests for yourself along the way. You can also try 
+    // tests for yourself along the way. You can also try
     // using the F# Interactive window to check your progress.
 
+    type Line = {
+        Date: string;
+        Open: float;
+        High: float;
+        Low: float;
+        Close: float;
+        Volume: float;
+        AdjClose: float
+    }
+
+    let parseLine (line: string): Line =
+        let lineParts = line.Split(',')
+        let datePart = Seq.head lineParts
+        let valueParts = Seq.tail lineParts
+
+        let values =
+            valueParts
+            |> Seq.map (fun x -> Double.Parse(x, CultureInfo.InvariantCulture))
+            |> Seq.toList
+
+        {
+            Date = datePart;
+            Open = values.[0];
+            High = values.[1];
+            Low = values.[2];
+            Close = values.[3];
+            Volume = values.[4];
+            AdjClose = values.[5]
+       }
+
     [<Koan>]
-    let YouGotTheAnswerCorrect() =
-        let result =  __
-        
-        AssertEquality "2012-03-13" result
+    let YouGotTheAnswerCorrectVersion() =
+        let sortedStockLines =
+            stockData
+            |> Seq.skip 1
+            |> Seq.map parseLine
+            |> Seq.sortByDescending (fun line -> abs(line.Open - line.Close))
+
+        AssertEquality "2012-03-13" (Seq.head sortedStockLines).Date
